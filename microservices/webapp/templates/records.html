@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prediction Records</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2rem; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background: #f2f2f2; }
+    .error { color: #b00020; margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>Prediction Records</h1>
+  <p><a href="/">&larr; Back to form</a></p>
+
+  {% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+  {% if records %}
+  <table>
+    <tr>
+      <th>ID</th><th>Gender</th><th>Study hrs/week</th><th>Attendance %</th>
+      <th>Past exam score</th><th>Parental education</th><th>Internet</th>
+      <th>Extracurricular</th><th>Prediction</th><th>Time (UTC)</th>
+    </tr>
+    {% for r in records %}
+    <tr>
+      <td>{{ r.id }}</td>
+      <td>{{ r.Gender }}</td>
+      <td>{{ r.Study_Hours_per_Week }}</td>
+      <td>{{ r.Attendance_Rate }}</td>
+      <td>{{ r.Past_Exam_Scores }}</td>
+      <td>{{ r.Parental_Education_Level }}</td>
+      <td>{{ r.Internet_Access_at_Home }}</td>
+      <td>{{ r.Extracurricular_Activities }}</td>
+      <td><strong>{{ r.prediction }}</strong></td>
+      <td>{{ r.created_at }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% elif not error %}
+  <p>No records yet.</p>
+  {% endif %}
+</body>
+</html>

@@ -1,0 +1,47 @@
+# Run from the microservices/ folder:  docker compose up --build
+name: student-microservices   # separate project name, never clashes with the old stack
+
+services:
+  dbapp:
+    build: ./dbapp
+    image: student-performance-db:latest
+    environment:
+      DATABASE_PATH: /data/student_predictions.db
+    volumes:
+      - dbdata:/data          # keeps the SQLite file across restarts
+    expose:
+      - "8001"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  webapp:
+    build: ./webapp
+    image: student-performance-web:latest
+    environment:
+      DB_SERVICE_URL: http://dbapp:8001
+    expose:
+      - "5000"
+    depends_on:
+      dbapp:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "8081:80"             # 8081 so the old stack can keep using 8080
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      webapp:
+        condition: service_healthy
+
+volumes:
+  dbdata:
