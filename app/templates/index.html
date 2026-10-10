@@ -4,55 +4,162 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Student Performance Prediction</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f3f7f6;
+            color: #24313a;
+            line-height: 1.5;
+        }
+        .page { width: min(760px, 92%); margin: 42px auto; }
+        .intro { margin-bottom: 22px; }
+        .eyebrow {
+            margin: 0 0 8px;
+            color: #168477;
+            font-size: .78rem;
+            font-weight: 700;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+        }
+        h1 { margin: 0 0 8px; font-size: clamp(1.7rem, 4vw, 2.25rem); }
+        .subtitle { margin: 0; color: #617079; }
+        .card {
+            padding: 28px;
+            background: #fff;
+            border: 1px solid #e0e9e7;
+            border-radius: 14px;
+            box-shadow: 0 8px 24px rgba(27, 55, 52, .06);
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 20px 18px;
+        }
+        .field { display: flex; flex-direction: column; gap: 7px; }
+        label { font-size: .92rem; font-weight: 600; }
+        input, select {
+            width: 100%;
+            min-height: 44px;
+            padding: 10px 12px;
+            border: 1px solid #cbd7d5;
+            border-radius: 8px;
+            background: #fff;
+            color: #24313a;
+            font: inherit;
+        }
+        input:focus, select:focus {
+            outline: 3px solid rgba(22, 132, 119, .16);
+            border-color: #168477;
+        }
+        .full { grid-column: 1 / -1; }
+        .hint { margin: 0; color: #75828a; font-size: .82rem; }
+        .error {
+            margin: 0 0 20px;
+            padding: 11px 13px;
+            color: #9c2f2f;
+            background: #fff1f0;
+            border: 1px solid #f2ceca;
+            border-radius: 8px;
+        }
+        button {
+            width: 100%;
+            min-height: 46px;
+            margin-top: 24px;
+            padding: 12px 18px;
+            border: 0;
+            border-radius: 8px;
+            background: #168477;
+            color: #fff;
+            font: inherit;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background .15s ease;
+        }
+        button:hover { background: #106b61; }
+        .footer { margin: 16px 0 0; color: #75828a; font-size: .82rem; text-align: center; }
+        @media (max-width: 560px) {
+            .page { margin: 26px auto; }
+            .card { padding: 20px; }
+            .form-grid { grid-template-columns: 1fr; gap: 16px; }
+            .full { grid-column: auto; }
+        }
+    </style>
 </head>
 <body>
-    <main>
-        <h1>Student Performance Prediction</h1>
-        {% if error %}
-        <p role="alert">{{ error }}</p>
-        {% endif %}
-        <form action="{{ url_for('predict') }}" method="post">
-            <label for="Gender">Gender</label>
-            <select id="Gender" name="Gender" required>
-                <option value="">Select gender</option>
-                {% for value in ["Male", "Female"] %}
-                <option value="{{ value }}" {% if form_data and form_data.get("Gender") == value %}selected{% endif %}>{{ value }}</option>
-                {% endfor %}
-            </select>
+    <main class="page">
+        <header class="intro">
+            <p class="eyebrow">Student insights</p>
+            <h1>Student Performance Prediction</h1>
+            <p class="subtitle">Enter the student's details to estimate whether they are likely to pass or fail.</p>
+        </header>
 
-            <label for="Study_Hours_per_Week">Study hours per week</label>
-            <input id="Study_Hours_per_Week" name="Study_Hours_per_Week" type="number" min="0" step="any" required value="{{ form_data.get('Study_Hours_per_Week', '') if form_data else '' }}">
+        <section class="card">
+            {% if error %}
+            <p class="error" role="alert">{{ error }}</p>
+            {% endif %}
 
-            <label for="Attendance_Rate">Attendance rate (%)</label>
-            <input id="Attendance_Rate" name="Attendance_Rate" type="number" min="0" max="100" step="any" required value="{{ form_data.get('Attendance_Rate', '') if form_data else '' }}">
+            <form action="{{ url_for('predict') }}" method="post">
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="Gender">Gender</label>
+                        <select id="Gender" name="Gender" required>
+                            <option value="">Select gender</option>
+                            {% for value in ["Male", "Female"] %}
+                            <option value="{{ value }}" {% if form_data and form_data.get("Gender") == value %}selected{% endif %}>{{ value }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
 
-            <label for="Past_Exam_Scores">Past exam score</label>
-            <input id="Past_Exam_Scores" name="Past_Exam_Scores" type="number" min="0" max="100" step="any" required value="{{ form_data.get('Past_Exam_Scores', '') if form_data else '' }}">
+                    <div class="field">
+                        <label for="Study_Hours_per_Week">Study hours per week</label>
+                        <input id="Study_Hours_per_Week" name="Study_Hours_per_Week" type="number" min="0" step="any" required value="{{ form_data.get('Study_Hours_per_Week', '') if form_data else '' }}" placeholder="e.g. 12">
+                    </div>
 
-            <label for="Parental_Education_Level">Parental education level</label>
-            <select id="Parental_Education_Level" name="Parental_Education_Level" required>
-                <option value="">Select education level</option>
-                {% for value in ["High School", "Bachelor", "Master"] %}
-                <option value="{{ value }}" {% if form_data and form_data.get("Parental_Education_Level") == value %}selected{% endif %}>{{ value }}</option>
-                {% endfor %}
-            </select>
+                    <div class="field">
+                        <label for="Attendance_Rate">Attendance rate (%)</label>
+                        <input id="Attendance_Rate" name="Attendance_Rate" type="number" min="0" max="100" step="any" required value="{{ form_data.get('Attendance_Rate', '') if form_data else '' }}" placeholder="0–100">
+                    </div>
 
-            <label for="Internet_Access_at_Home">Internet access at home</label>
-            <select id="Internet_Access_at_Home" name="Internet_Access_at_Home" required>
-                {% for value in ["Yes", "No"] %}
-                <option value="{{ value }}" {% if form_data and form_data.get("Internet_Access_at_Home") == value %}selected{% endif %}>{{ value }}</option>
-                {% endfor %}
-            </select>
+                    <div class="field">
+                        <label for="Past_Exam_Scores">Past exam score</label>
+                        <input id="Past_Exam_Scores" name="Past_Exam_Scores" type="number" min="0" max="100" step="any" required value="{{ form_data.get('Past_Exam_Scores', '') if form_data else '' }}" placeholder="0–100">
+                    </div>
 
-            <label for="Extracurricular_Activities">Extracurricular activities</label>
-            <select id="Extracurricular_Activities" name="Extracurricular_Activities" required>
-                {% for value in ["Yes", "No"] %}
-                <option value="{{ value }}" {% if form_data and form_data.get("Extracurricular_Activities") == value %}selected{% endif %}>{{ value }}</option>
-                {% endfor %}
-            </select>
+                    <div class="field">
+                        <label for="Parental_Education_Level">Education level of parents</label>
+                        <select id="Parental_Education_Level" name="Parental_Education_Level" required>
+                            <option value="">Select education level</option>
+                            {% for value in ["High School", "Bachelors", "Masters", "PhD"] %}
+                            <option value="{{ value }}" {% if form_data and form_data.get("Parental_Education_Level") == value %}selected{% endif %}>{{ value }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
 
-            <button type="submit">Predict</button>
-        </form>
+                    <div class="field">
+                        <label for="Internet_Access_at_Home">Internet access at home</label>
+                        <select id="Internet_Access_at_Home" name="Internet_Access_at_Home" required>
+                            {% for value in ["Yes", "No"] %}
+                            <option value="{{ value }}" {% if form_data and form_data.get("Internet_Access_at_Home") == value %}selected{% endif %}>{{ value }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="field full">
+                        <label for="Extracurricular_Activities">Extracurricular activities</label>
+                        <select id="Extracurricular_Activities" name="Extracurricular_Activities" required>
+                            {% for value in ["Yes", "No"] %}
+                            <option value="{{ value }}" {% if form_data and form_data.get("Extracurricular_Activities") == value %}selected{% endif %}>{{ value }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit">Predict student performance</button>
+            </form>
+        </section>
+        <p class="footer">Prediction is an estimate based on the information entered.</p>
     </main>
 </body>
 </html>
