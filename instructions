@@ -1,0 +1,263 @@
+The project is a classification problem where we predict:
+
+`Pass_Fail` → `Pass` / `Fail`
+
+### 1. Dataset analysis — DONE ✅
+
+Dataset:
+`data/student_performance_dataset.csv`
+
+It has:
+- 708 rows
+- 10 columns
+- No missing values
+- 354 Pass / 354 Fail
+
+Important discovery:
+`Final_Exam_Score` directly determines `Pass_Fail`, so using it would cause **target leakage**.
+
+Therefore we excluded:
+- `Student_ID`
+- `Final_Exam_Score`
+
+Features used for training:
+
+```text
+Gender
+Study_Hours_per_Week
+Attendance_Rate
+Past_Exam_Scores
+Parental_Education_Level
+Internet_Access_at_Home
+Extracurricular_Activities
+```
+
+Target:
+
+```text
+Pass_Fail
+```
+
+### 2. Preprocessing — DONE ✅
+
+File:
+
+```text
+src/preprocessing.py
+```
+
+Implemented:
+- Numerical feature imputation
+- StandardScaler
+- Categorical feature imputation
+- OneHotEncoder
+- ColumnTransformer
+- sklearn Pipeline
+
+Also defined the feature/target/leakage constants.
+
+### 3. Model training — DONE ✅
+
+File:
+
+```text
+src/train.py
+```
+
+We trained:
+
+1. Logistic Regression
+2. Random Forest
+3. Gradient Boosting
+
+The best model was:
+
+**Random Forest**
+
+Held-out test results:
+
+```text
+Accuracy: 87.32%
+F1-score: 0.8846
+```
+
+The complete preprocessing + model pipeline is saved as:
+
+```text
+models/model.pkl
+```
+
+We also save:
+
+```text
+artifacts/test_data.csv
+artifacts/metrics.json
+```
+
+### 4. Model evaluation — DONE ✅
+
+File:
+
+```text
+src/evaluate.py
+```
+
+Evaluation is correctly performed on the **held-out test set**, not the training data.
+
+Current confusion matrix:
+
+```text
+              Predicted
+              Fail   Pass
+Actual Fail    55     16
+       Pass     2     69
+```
+
+Classification report:
+
+```text
+              precision    recall    f1-score
+
+Fail            0.96       0.77       0.86
+Pass            0.81       0.97       0.88
+```
+
+### 5. Automated tests — DONE ✅
+
+File:
+
+```text
+tests/test_pipeline.py
+```
+
+There are currently **6 tests** covering:
+
+- Dataset loading
+- Target values
+- Leakage prevention
+- Feature column definitions
+- Preprocessor transformation
+- Handling unseen categorical values
+
+We added:
+
+```text
+pytest.ini
+```
+
+with:
+
+```ini
+[pytest]
+pythonpath = .
+```
+
+And:
+
+```text
+pytest -q
+```
+
+currently gives:
+
+```text
+6 passed
+```
+
+So the ML + testing stage is complete.
+
+---
+
+# WHAT YOU SHOULD DO NEXT
+
+The next part is **Group 1: Build, Package & Serve**.
+
+Your immediate task is:
+
+## 6. Build Flask prediction API
+
+Create something like:
+
+```text
+app/
+├── app.py
+└── templates/
+```
+
+The Flask application should:
+
+1. Load `models/model.pkl`
+2. Accept student information
+3. Convert the input into the required feature format
+4. Call the trained pipeline
+5. Return `Pass` or `Fail`
+
+For example, eventually we should be able to send:
+
+```json
+{
+  "Gender": "Male",
+  "Study_Hours_per_Week": 15,
+  "Attendance_Rate": 85,
+  "Past_Exam_Scores": 70,
+  "Parental_Education_Level": "Bachelor",
+  "Internet_Access_at_Home": "Yes",
+  "Extracurricular_Activities": "Yes"
+}
+```
+
+and get something like:
+
+```json
+{
+  "prediction": "Pass"
+}
+```
+
+### After Flask
+
+The overall remaining roadmap is:
+
+```text
+ML pipeline                    ✅ DONE
+        ↓
+Automated tests                ✅ DONE
+        ↓
+Flask API + Waitress           ← NEXT
+        ↓
+Docker                         ← NEXT
+        ↓
+Kubernetes Deployment/Service
+        ↓
+Nginx
+        ↓
+--------------------------------
+Group 1 complete
+--------------------------------
+        ↓
+Git branching/workflow
+        ↓
+MLflow
+        ↓
+Jenkins CI/CD
+        ↓
+Kubernetes HPA/scaling
+        ↓
+Prometheus + Grafana
+        ↓
+Drift detection
+        ↓
+--------------------------------
+Group 2 complete
+--------------------------------
+```
+
+### Important
+
+Don't change the existing preprocessing/model code unless there is an actual problem.
+
+Don't retrain the model unnecessarily.
+
+Don't use `Final_Exam_Score` in the API because it is the leaked feature we intentionally excluded.
+
+The **next concrete deliverable is a working Flask `/predict` API using `models/model.pkl`**.

@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Prediction Result</title>
+</head>
+<body>
+    <main>
+        <h1>Prediction Result</h1>
+        <p>The predicted result is: <strong>{{ prediction }}</strong></p>
+        {% if probability %}
+        <p>Fail probability: {{ "%.1f"|format(probability["Fail"] * 100) }}%</p>
+        <p>Pass probability: {{ "%.1f"|format(probability["Pass"] * 100) }}%</p>
+        {% endif %}
+        <a href="{{ url_for('welcome') }}">Make another prediction</a>
+    </main>
+</body>
+</html>

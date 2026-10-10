@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Student Performance Prediction</title>
+</head>
+<body>
+    <main>
+        <h1>Student Performance Prediction</h1>
+        {% if error %}
+        <p role="alert">{{ error }}</p>
+        {% endif %}
+        <form action="{{ url_for('predict') }}" method="post">
+            <label for="Gender">Gender</label>
+            <select id="Gender" name="Gender" required>
+                <option value="">Select gender</option>
+                {% for value in ["Male", "Female"] %}
+                <option value="{{ value }}" {% if form_data and form_data.get("Gender") == value %}selected{% endif %}>{{ value }}</option>
+                {% endfor %}
+            </select>
+
+            <label for="Study_Hours_per_Week">Study hours per week</label>
+            <input id="Study_Hours_per_Week" name="Study_Hours_per_Week" type="number" min="0" step="any" required value="{{ form_data.get('Study_Hours_per_Week', '') if form_data else '' }}">
+
+            <label for="Attendance_Rate">Attendance rate (%)</label>
+            <input id="Attendance_Rate" name="Attendance_Rate" type="number" min="0" max="100" step="any" required value="{{ form_data.get('Attendance_Rate', '') if form_data else '' }}">
+
+            <label for="Past_Exam_Scores">Past exam score</label>
+            <input id="Past_Exam_Scores" name="Past_Exam_Scores" type="number" min="0" max="100" step="any" required value="{{ form_data.get('Past_Exam_Scores', '') if form_data else '' }}">
+
+            <label for="Parental_Education_Level">Parental education level</label>
+            <select id="Parental_Education_Level" name="Parental_Education_Level" required>
+                <option value="">Select education level</option>
+                {% for value in ["High School", "Bachelor", "Master"] %}
+                <option value="{{ value }}" {% if form_data and form_data.get("Parental_Education_Level") == value %}selected{% endif %}>{{ value }}</option>
+                {% endfor %}
+            </select>
+
+            <label for="Internet_Access_at_Home">Internet access at home</label>
+            <select id="Internet_Access_at_Home" name="Internet_Access_at_Home" required>
+                {% for value in ["Yes", "No"] %}
+                <option value="{{ value }}" {% if form_data and form_data.get("Internet_Access_at_Home") == value %}selected{% endif %}>{{ value }}</option>
+                {% endfor %}
+            </select>
+
+            <label for="Extracurricular_Activities">Extracurricular activities</label>
+            <select id="Extracurricular_Activities" name="Extracurricular_Activities" required>
+                {% for value in ["Yes", "No"] %}
+                <option value="{{ value }}" {% if form_data and form_data.get("Extracurricular_Activities") == value %}selected{% endif %}>{{ value }}</option>
+                {% endfor %}
+            </select>
+
+            <button type="submit">Predict</button>
+        </form>
+    </main>
+</body>
+</html>
