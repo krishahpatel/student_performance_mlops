@@ -1,5 +1,7 @@
 # student_performance_mlops
 
+Jenkins monitoring branch 
+
 Student performance classification project with a trained scikit-learn pipeline and a Group 1 serving stack (Flask + Waitress + Docker + Nginx).
 
 The model predicts `Pass_Fail` (`Pass` / `Fail`) from student information.
