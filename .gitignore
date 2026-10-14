@@ -12,3 +12,5 @@ artifacts/
 mlruns/
 mlartifacts/
 mlflow.db
+
+push_commands.txt
