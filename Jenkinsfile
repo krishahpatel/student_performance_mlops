@@ -28,6 +28,16 @@ pipeline {
                 sh 'docker compose build'
             }
         }
+
+        stage('Deploy') {
+            when {
+                branch 'main'
+            }
+            steps {
+                sh 'docker compose up -d --build'
+                sh 'docker compose ps'
+            }
+        }
     }
 
     post {
