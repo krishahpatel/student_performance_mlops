@@ -2,9 +2,19 @@ import os
 from datetime import datetime, timezone
 
 from flask import Flask, jsonify, request
+# pyrefly: ignore[missing-import]
 from flask_sqlalchemy import SQLAlchemy
 
+from prometheus_client import make_wsgi_app
+from werkzeug.middleware.dispatcher import DispatcherMiddleware
+
 app = Flask(__name__)
+
+app.wsgi_app = DispatcherMiddleware(
+    app.wsgi_app,
+    {"/metrics": make_wsgi_app()},
+)
+
 
 # Absolute path so it can live on a docker volume (mounted at /data).
 db_path = os.environ.get("DATABASE_PATH", "/data/student_predictions.db")

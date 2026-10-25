@@ -6,3 +6,4 @@ numpy
 scipy
 joblib
 scikit-learn==1.7.2
+prometheus-client
