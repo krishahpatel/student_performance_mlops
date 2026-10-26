@@ -19,7 +19,7 @@ from werkzeug.middleware.dispatcher import DispatcherMiddleware
 
 app = Flask(__name__)
 
-# Expose Prometheus metrics separately from Flask request handling.
+# Expose registered Prometheus metrics at /metrics.
 app.wsgi_app = DispatcherMiddleware(
     app.wsgi_app,
     {"/metrics": make_wsgi_app()},
@@ -52,6 +52,11 @@ PREDICTION_FAILURES = Counter(
     ["stage"],
 )
 
+STUDY_HOURS_REJECTIONS = Counter(
+    "study_hours_limit_rejections_total",
+    "Requests rejected because weekly study hours exceed 140",
+)
+
 INFERENCE_TIME = Histogram(
     "model_inference_duration_seconds",
     "Time spent computing predictions and probabilities",
@@ -68,7 +73,7 @@ DB_SAVE_DURATION = Histogram(
     "Time spent calling the database service to save a record",
 )
 
-# Initialize known label values so they appear before the first event.
+# Initialize known labels so they appear before the first event.
 for result in ("Pass", "Fail"):
     PREDICTIONS.labels(result=result)
 
@@ -86,12 +91,11 @@ def start_request_timer():
 
 @app.after_request
 def record_http_metrics(response):
-    # Keep health probes separate from application traffic.
-    # /metrics is handled by the WSGI middleware above.
+    # Exclude health probes from application traffic metrics.
+    # /metrics is handled separately by the WSGI middleware.
     if request.endpoint in ("health", "ready"):
         return response
 
-    # Use route templates instead of raw URLs to limit label values.
     route = request.url_rule.rule if request.url_rule else "unmatched"
 
     HTTP_REQUESTS.labels(
@@ -113,6 +117,7 @@ def record_http_metrics(response):
 # -------------------- Application configuration --------------------
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 MODEL_PATH = os.environ.get(
     "MODEL_PATH",
     os.path.join(BASE_DIR, "model.pkl"),
@@ -124,6 +129,8 @@ DB_SERVICE_URL = os.environ.get(
     "DB_SERVICE_URL",
     "http://dbapp:8001",
 )
+
+MAX_STUDY_HOURS_PER_WEEK = 140
 
 NUMERIC_FEATURES = [
     "Study_Hours_per_Week",
@@ -138,7 +145,7 @@ CATEGORICAL_FEATURES = [
     "Extracurricular_Activities",
 ]
 
-# Final_Exam_Score is intentionally excluded to prevent target leakage.
+# Final_Exam_Score is excluded to prevent target leakage.
 FEATURES = [
     "Gender",
     "Study_Hours_per_Week",
@@ -194,6 +201,16 @@ def parse_input(data):
                 row[col] = float(value)
             except (ValueError, TypeError):
                 raise ValueError(f"{col} must be a number") from None
+
+            # Reject study hours above 140 before running the model.
+            if (
+                col == "Study_Hours_per_Week"
+                and row[col] > MAX_STUDY_HOURS_PER_WEEK
+            ):
+                STUDY_HOURS_REJECTIONS.inc()
+                raise ValueError(
+                    "Study hours per week cannot be more than 140."
+                )
         else:
             row[col] = str(value).strip()
 
@@ -264,7 +281,9 @@ def predict():
             probability = get_probability(inp)
 
         if prediction not in ("Pass", "Fail"):
-            raise ValueError("Model returned an unexpected prediction label")
+            raise ValueError(
+                "Model returned an unexpected prediction label"
+            )
 
     except Exception:
         PREDICTION_FAILURES.labels(stage="inference").inc()
@@ -280,7 +299,7 @@ def predict():
             error=message,
         ), 500
 
-    # A successful prediction is counted even if saving it later fails.
+    # Count successful predictions even if database saving fails.
     PREDICTIONS.labels(result=prediction).inc()
 
     save_record(row, prediction)
